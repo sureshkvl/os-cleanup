@@ -44,11 +44,11 @@ class Tree(object):
 
     def print_info_tree(self, data):
         """Printing Green Colored Text."""
-        cprint(format_tree(data), 'green')
+        printo(format_tree(data))
 
     def print_warn_tree(self, data):
         """Printing Red Colored Text."""
-        cprint(format_tree(data), 'red')
+        printo(format_tree(data))
 
 
 @add_metaclass(abc.ABCMeta)

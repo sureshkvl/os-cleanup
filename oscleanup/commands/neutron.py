@@ -1,5 +1,6 @@
 from commands.base import BaseCommand
 from resources.neutron import Networks, Subnets, Ports, Routers
+from resources.nova import Servers
 import json
 
 
@@ -155,11 +156,16 @@ class InspectNetworks(BaseCommand):
         params = {"name": router.get('name'), "id": router.get('id')}
         return self.populate_node(self.format_node('Router', **params))
 
+    def __populate_server_node(self, server):
+        params = {"name": server.get('name'), "id": server.get('id')}
+        return self.populate_node(self.format_node('Server', **params))
+
     def __init__(self, options):
         m = Networks(options)
         s = Subnets(options)
         p = Ports(options)
         r = Routers(options)
+        v = Servers(options)
         result = []
         if not options.args:
             self.netlist = m.list()
@@ -179,10 +185,14 @@ class InspectNetworks(BaseCommand):
                     if "router" in port.get('device_owner'):
                         # find the routers associated for the ports
                         for rtr in r.find(**{"id": port.get('device_id')}):
-                            r_node = self.__populate_router_node(port)
+                            r_node = self.__populate_router_node(rtr)
                             self.add_child_node(p_node, r_node)
-                    else:
+                    elif "nova" in port.get('device_owner'):
                         # find the vms associated for the ports
+                        for server in v.find(**{"id": port.get('device_id')}):
+                            v_node = self.__populate_server_node(server)
+                            self.add_child_node(p_node, v_node)
+                    else:
                         pass
                     self.add_child_node(s_node, p_node)
                 self.add_child_node(net_node, s_node)
@@ -199,11 +209,13 @@ class InspectNetworks(BaseCommand):
         self.write_json_file(result)
 
 
+class PurgeNetworks(BaseCommand):
+    pass
 
 """
 class NetworkTree(BaseCommand):
     name = "network_tree"
-    def __init__(self, options):
+        def __init__(self, options):
         self.n = Networks(options)
         self.n.populate()
         self.netlist = self.n.list()

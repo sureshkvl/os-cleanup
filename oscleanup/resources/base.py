@@ -1,5 +1,6 @@
 from six import add_metaclass
-from neutronclient.v2_0 import client
+from neutronclient.v2_0 import client as neutron
+from novaclient import client as nova
 import abc
 
 
@@ -7,10 +8,9 @@ import abc
 class BaseResource(object):
     """
     Abstract Base Class for all the Resource classes.
-    """
 
     def __init__(self, options):
-        """Initialize routine. Creates a neutron client object """
+
         #
         self.options = options
         # neutron client
@@ -24,7 +24,7 @@ class BaseResource(object):
     @abc.abstractmethod
     def delete(self, **f):
         pass
-
+    """
     # @abc.abstractmethod
     # def populate(self, **f):
     #    pass
@@ -74,3 +74,49 @@ class BaseResource(object):
         # Exact match condition
         else:
             return list(filter(lambda x: x.get(key[0]) == value[0], self.data))
+
+
+@add_metaclass(abc.ABCMeta)
+class NeutronResource(BaseResource):
+    """
+    Abstract Base Class for all the Resource classes.
+    """
+
+    def __init__(self, options):
+        """Initialize routine. Creates a neutron client object """
+        #
+        self.options = options
+        # neutron client
+        self.nc = neutron.Client(**self.options.creds)
+        # variable to hold the resource lists
+        self.data = []
+
+    def list(self, filter=None):
+        return self.data
+
+    @abc.abstractmethod
+    def delete(self, **f):
+        pass
+
+
+@add_metaclass(abc.ABCMeta)
+class NovaResource(BaseResource):
+    """
+    Abstract Base Class for all the Resource classes.
+    """
+
+    def __init__(self, options):
+        """Initialize routine. Creates a neutron client object """
+        #
+        self.options = options
+        # neutron client
+        self.nc = nova.Client("2.1", **self.options.creds)
+        # variable to hold the resource lists
+        self.data = []
+
+    def list(self, filter=None):
+        return self.data
+
+    @abc.abstractmethod
+    def delete(self, **f):
+        pass

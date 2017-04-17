@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'python-neutronclient>=6.1.0',
+    'python-novaclient>=8.0.0',
     'six',
     'prettytable',
     'termcolor'

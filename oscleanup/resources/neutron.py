@@ -1,17 +1,15 @@
-from resources.base import BaseResource
-from neutronclient.v2_0 import client
+from resources.base import NeutronResource
+# from neutronclient.v2_0 import client
 
 
-class Networks(BaseResource):
+class Networks(NeutronResource):
 
     def __init__(self, options):
         super(Networks, self).__init__(options)
         try:
             self.data = self.nc.list_networks(tenant_id=self.options.tenant_id)
             self.data = self.data['networks']
-            self.networks_with_no_subnets = [n.get("id")
-                                             for n in self.data
-                                             if len(n.get("subnets")) == 0]
+
         except Exception, arg:
             print("Exception in listing networks..Exiting %s " % arg)
             exit()
@@ -23,7 +21,7 @@ class Networks(BaseResource):
             print("Exception in deleting networks..%s " % arg)
 
 
-class Subnets(BaseResource):
+class Subnets(NeutronResource):
 
     def __init__(self, options):
         super(Subnets, self).__init__(options)
@@ -41,7 +39,7 @@ class Subnets(BaseResource):
             print("Exception in deleting router..%s " % arg)
 
 
-class Ports(BaseResource):
+class Ports(NeutronResource):
 
     def __init__(self, options):
         super(Ports, self).__init__(options)
@@ -62,7 +60,7 @@ class Ports(BaseResource):
             print("Exception in deleting port..%s " % arg)
 
 
-class Routers(BaseResource):
+class Routers(NeutronResource):
 
     def __init__(self, options):
         super(Routers, self).__init__(options)

@@ -6,6 +6,7 @@ import json
 import time
 from commands.base import *
 from commands.neutron import *
+from commands.nova import *
 
 from prettytable import PrettyTable
 import utils
