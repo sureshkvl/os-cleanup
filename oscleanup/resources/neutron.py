@@ -76,3 +76,17 @@ class Routers(NeutronResource):
             self.nc.delete_router(id)
         except Exception, arg:
             print("Exception in deleting router..%s " % arg)
+
+    def clear_gateway(self, id):
+        # remove_gateway_router
+        try:
+            self.nc.remove_gateway_router(id)
+        except Exception, arg:
+            print("Exception in remove_gateway_router..%s " % arg)
+
+    def remove_interface(self, id, portid):
+        # remove_interface_router
+        try:
+            self.nc.remove_interface_router(id, body={'port_id': portid})
+        except Exception, arg:
+            print("Exception in deleting router..%s " % arg)

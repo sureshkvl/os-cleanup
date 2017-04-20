@@ -19,4 +19,5 @@ class Servers(NovaResource):
             exit()
 
     def delete(self, id):
-        pass
+        return self.nc.servers.delete(id)
+

@@ -52,7 +52,15 @@ If the VM is associated with more than one networks, more than one ports ???????
 2. Delete the Router:
    remove the interfaces from the router
    neutron router-interface-delete <routerid>  <subnetid>
+
+   neutron clear
+
 If the router is associated with more than one subnets/networks...??????????????????????
+   clear the router gateway?
+   neutron router-gateway-clear 5358f9b1-be3d-4f87-8a70-0b53632700a2
+
    remove the router
 3. Delete the network
 neutron net-delete 3414765a-21f8-4715-8624-03010592adc
+
+4. floating ip ??

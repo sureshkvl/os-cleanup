@@ -1,5 +1,5 @@
-import sys
-from setuptools import setup, find_packages
+from setuptools import setup
+from setuptools import find_packages
 
 install_requires = [
     'python-neutronclient>=6.1.0',

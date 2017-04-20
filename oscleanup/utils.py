@@ -6,6 +6,10 @@ import os
 import sys
 
 
+def fff():
+    return 10
+
+
 def get_credentials():
     """Returns the Openstack env variables as a dict."""
     d = {}

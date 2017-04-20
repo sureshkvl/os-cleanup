@@ -192,6 +192,7 @@ class InspectNetworks(BaseCommand):
                         for server in v.find(**{"id": port.get('device_id')}):
                             v_node = self.__populate_server_node(server)
                             self.add_child_node(p_node, v_node)
+                        # pass
                     else:
                         pass
                     self.add_child_node(s_node, p_node)
@@ -210,59 +211,36 @@ class InspectNetworks(BaseCommand):
 
 
 class PurgeNetworks(BaseCommand):
-    pass
+    name = "purge_networks"
 
-"""
-class NetworkTree(BaseCommand):
-    name = "network_tree"
-        def __init__(self, options):
-        self.n = Networks(options)
-        self.n.populate()
-        self.netlist = self.n.list()
-        self.s = Subnets(options)
-        self.s.populate()
-        self.p = Ports(options)
-        self.p.populate()
-        self.r = Routers(options)
-        self.r.populate()
-        #self.FIELDS = ['id', 'name', 'status', 'external_gateway_info']
-
-        #self.print_table(self.r.list())
-
+    def __init__(self, options):
+        m = Networks(options)
+        s = Subnets(options)
+        p = Ports(options)
+        r = Routers(options)
+        v = Servers(options)
+        result = []
+        if not options.args:
+            self.netlist = m.list()
+        else:
+            self.netlist = m.find(**json.loads(options.args))
+        # Iterate network list
         for net in self.netlist:
             s_node, p_node, r_node = None, None, None
-            net_node = self.populate_node(self.format_node('Network',
-                                          **{"name": net.get('name'),
-                                          "id": net.get('id')}))
-            for subnet in self.s.find(**{"network_id": net.get('id')}):
-                s_node = self.populate_node(self.format_node('Subnet',
-                                            **{"name": subnet.get('name'),
-                                            "id": subnet.get('id')}))
-                for port in self.p.find_in(**{"fixed_ips": subnet.get('id')}):
-                    p_node = self.populate_node(self.format_node('Port',
-                                            **{"name": port.get('name'),
-                                            "id": port.get('id'),
-                                            "device_owner": port.get('device_owner'),
-                                            "device_id": port.get('device_id')
-                                            }))
-                    for rtr in self.r.find(**{"id": port.get('device_id')}):
-                        r_node = self.populate_node(self.format_node('Router',
-                                                    **{"name": rtr.get('name'),
-                                                    "id": rtr.get('id')
-                                                    }))
-                        self.add_child_node(p_node, r_node)
-                    self.add_child_node(s_node, p_node)
+            # find the subnets associated for the network, and iterate it
+            for subnet in s.find(**{"network_id": net.get('id')}):
+                # find the ports associated for the subnet , and iterate it
+                for port in p.find(**{"fixed_ips": subnet.get('id')+"*"}):
+                    if "router" in port.get('device_owner'):
+                        # find the routers associated for the ports
+                        for rtr in r.find(**{"id": port.get('device_id')}):
+                            r.remove_interface(rtr.get('id'),port.get('id'))
+                            r.delete(rtr.get('id'))
+                    elif "nova" in port.get('device_owner'):
+                        # find the vms associated for the ports
+                        for server in v.find(**{"id": port.get('device_id')}):
+                            v.delete(server.get('id'))
+                    else:
+                        pass
+            m.delete(net.get('id'))
 
-                self.add_child_node(net_node, s_node)
-            if s_node and p_node and r_node :
-                self.print_info_tree(net_node)
-            else:
-                self.print_warn_tree(net_node)
-            print "\n"
-
-    def run(self, **f):
-        pass
-
-    def report(self, **f):
-        pass
-"""
