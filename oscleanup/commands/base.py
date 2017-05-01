@@ -52,6 +52,32 @@ class Tree(object):
         #cprint(format_tree(data),"red")
         printo(format_tree(data))
 
+    def populate_net_node(self, net):
+        params = {"name": net.get('name'), "id": net.get('id')}
+        return self.populate_node(self.format_node("Network", **params))
+
+    def populate_subnet_node(self, subnet):
+        params = {"name": subnet.get('name'), "id": subnet.get('id')}
+        return self.populate_node(self.format_node("Subnet", **params))
+
+    def populate_port_node(self, port):
+        params = {
+                  "name": port.get('name'),
+                  "id": port.get('id'),
+                  "device_owner": port.get('device_owner'),
+                  "device_id": port.get('device_id')
+                 }
+        return self.populate_node(self.format_node("Port", **params))
+
+    def populate_router_node(self, router):
+        params = {"name": router.get('name'), "id": router.get('id')}
+        return self.populate_node(self.format_node('Router', **params))
+
+    def populate_server_node(self, server):
+        params = {"name": server.get('name'), "id": server.get('id')}
+        return self.populate_node(self.format_node('Server', **params))
+
+
 
 @add_metaclass(abc.ABCMeta)
 class Print(object):

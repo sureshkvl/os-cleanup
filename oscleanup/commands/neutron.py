@@ -135,31 +135,6 @@ class InspectNetworks(BaseCommand):
     FIELDS = ['id', 'name', 'status', 'router:external', 'subnets', 'shared']
     name = "inspect_networks"
 
-    def __populate_net_node(self, net):
-        params = {"name": net.get('name'), "id": net.get('id')}
-        return self.populate_node(self.format_node("Network", **params))
-
-    def __populate_subnet_node(self, subnet):
-        params = {"name": subnet.get('name'), "id": subnet.get('id')}
-        return self.populate_node(self.format_node("Subnet", **params))
-
-    def __populate_port_node(self, port):
-        params = {
-                  "name": port.get('name'),
-                  "id": port.get('id'),
-                  "device_owner": port.get('device_owner'),
-                  "device_id": port.get('device_id')
-                 }
-        return self.populate_node(self.format_node("Port", **params))
-
-    def __populate_router_node(self, router):
-        params = {"name": router.get('name'), "id": router.get('id')}
-        return self.populate_node(self.format_node('Router', **params))
-
-    def __populate_server_node(self, server):
-        params = {"name": server.get('name'), "id": server.get('id')}
-        return self.populate_node(self.format_node('Server', **params))
-
     def __init__(self, options):
         m = Networks(options)
         s = Subnets(options)
@@ -175,22 +150,22 @@ class InspectNetworks(BaseCommand):
         # Iterate network list
         for net in self.netlist:
             s_node, p_node, r_node = None, None, None
-            net_node = self.__populate_net_node(net)
+            net_node = self.populate_net_node(net)
             # find the subnets associated for the network, and iterate it
             for subnet in s.find(**{"network_id": net.get('id')}):
-                s_node = self.__populate_subnet_node(subnet)
+                s_node = self.populate_subnet_node(subnet)
                 # find the ports associated for the subnet , and iterate it
                 for port in p.find(**{"fixed_ips": subnet.get('id')+"*"}):
-                    p_node = self.__populate_port_node(port)
+                    p_node = self.populate_port_node(port)
                     if "router" in port.get('device_owner'):
                         # find the routers associated for the ports
                         for rtr in r.find(**{"id": port.get('device_id')}):
-                            r_node = self.__populate_router_node(rtr)
+                            r_node = self.populate_router_node(rtr)
                             self.add_child_node(p_node, r_node)
                     elif "nova" in port.get('device_owner'):
                         # find the vms associated for the ports
                         for server in v.find(**{"id": port.get('device_id')}):
-                            v_node = self.__populate_server_node(server)
+                            v_node = self.populate_server_node(server)
                             self.add_child_node(p_node, v_node)
                         # pass
                     else:
@@ -244,3 +219,51 @@ class PurgeNetworks(BaseCommand):
                         pass
             m.delete(net.get('id'))
 
+
+
+
+class InspectRouters(BaseCommand):
+
+    FIELDS = ['id', 'name', 'status', 'external_gateway_info']
+    name = "inspect_routers"
+
+    def populate_subnet_node(self, port):
+        params = port.get("fixed_ips")
+        return self.populate_node(self.format_node("Subnet", **params[0]))
+
+    def populate_port_node(self, port):
+        params = {
+                  "id": port.get('id'),
+                  "device_owner": port.get('device_owner')
+                  }
+        return self.populate_node(self.format_node("Port", **params))
+
+    def __init__(self, options):
+        m = Networks(options)
+        s = Subnets(options)
+        p = Ports(options)
+        r = Routers(options)
+        v = Servers(options)
+        result = []
+        if not options.args:
+            self.rtrlist = r.list()
+        else:
+            self.rtrlist = r.find(**json.loads(options.args))
+
+        self.print_table(self.rtrlist, self.FIELDS)
+        self.portlist = p.list()
+        # Iterate Router List
+        for rtr in self.rtrlist:
+            s_node, p_node, r_node = None, None, None
+            r_node = self.populate_router_node(rtr)
+            # find the directly connected ports in this router
+            for port in p.find(**{"device_id": rtr.get('id')}):
+                p_node = self.populate_port_node(port)
+                s_node = self.populate_subnet_node(port)
+                # Networks
+                for net in m.find(**{"id": port.get('network_id')}):
+                    n_node = self.populate_net_node(net)
+                    self.add_child_node(s_node, n_node)
+                self.add_child_node(p_node, s_node)
+                self.add_child_node(r_node, p_node)
+            self.print_info_tree(r_node)
