@@ -1,66 +1,74 @@
-# os-cleanup
-openstack resource cleanup
+# os-cleanup (openstack resource cleanup)
+
+OS Cleanup project helps to view/remove the resources.
+
+
+## Usecases:
+1. User wants to view or remove all the Resources for a specific type.
+    Example : Remove all the Networks for a given tenant.
+2. User wants to view remove the subset of the Resources  for a specific type.
+    Example:  Remove the Networks which has subnet field is empty. or name contains "test"
+3. User want to view or remove the Specific Resource with the dependent resources.
+    Example:  Network Resource -> subnet  -> Ports  -> Routers/VMS etc
+4. Remove all the resources in the tenant.
 
 
 
-python oscleanup/main.py -T 5ff3bceb409c48a58aa8c88c4324c4ad  --command list_networks --arg '{"name":"test*"}'
-python oscleanup/main.py -T 5ff3bceb409c48a58aa8c88c4324c4ad  --command list_ports --args '{"network_id":" "}'
-python oscleanup/main.py -T 5ff3bceb409c48a58aa8c88c4324c4ad  --command list_networks --args '{"subnets":"[]"}'
-python oscleanup/main.py -T 5ff3bceb409c48a58aa8c88c4324c4ad  --command list_routers --args '{"name":"test1"}'
+## Installation:
 
-(oscleanup) cloud@dev2:~/oscleanup/os-cleanup$ nova show vm1
-+--------------------------------------+----------------------------------------------------------------+
-| Property                             | Value                                                          |
-+--------------------------------------+----------------------------------------------------------------+
-| Net1 network                         | 192.168.1.3                                                    |
-| OS-DCF:diskConfig                    | AUTO                                                           |
-| OS-EXT-AZ:availability_zone          | nova                                                           |
-| OS-EXT-STS:power_state               | 1                                                              |
-| OS-EXT-STS:task_state                | -                                                              |
-| OS-EXT-STS:vm_state                  | active                                                         |
-| OS-SRV-USG:launched_at               | 2017-04-15T13:45:59.000000                                     |
-| OS-SRV-USG:terminated_at             | -                                                              |
-| accessIPv4                           |                                                                |
-| accessIPv6                           |                                                                |
-| config_drive                         | True                                                           |
-| created                              | 2017-04-15T13:45:50Z                                           |
-| description                          | vm1                                                            |
-| flavor                               | m1.tiny (1)                                                    |
-| hostId                               | cd7380871845dc53ae1a15e2065e10dca926bd5b7df991e8bdcfa258       |
-| id                                   | 38a56b74-87a7-4c5d-84cd-22e8280788f3                           |
-| image                                | cirros-0.3.4-x86_64-uec (6121a5c3-e761-41e2-aac1-6f99051d2b84) |
-| key_name                             | -                                                              |
-| locked                               | False                                                          |
-| metadata                             | {}                                                             |
-| name                                 | vm1                                                            |
-| os-extended-volumes:volumes_attached | []                                                             |
-| progress                             | 0                                                              |
-| security_groups                      | default                                                        |
-| status                               | ACTIVE                                                         |
-| tenant_id                            | e4874d7f84eb462097f055ceb0d02dbf                               |
-| updated                              | 2017-04-15T13:45:59Z                                           |
-| user_id                              | 5216e1b8f5a44ff180c504d35e552ad4                               |
-+--------------------------------------+----------------------------------------------------------------+
+Install it using virtual environment
+Prerequisties:  Python 2.7
+
+1. setup virtualenv
+2. clone the os-cleanup repo from github
+3. Install it
 
 
-Purge Networks:
+```
+cloud@devstack1:~$ virtualenv os-c
+New python executable in /home/cloud/os-c/bin/python
+Installing setuptools, pip, wheel...done.
+cloud@devstack1:~$ cd os-c/
+cloud@devstack1:~/os-c$ . bin/activate
+(os-c) cloud@devstack1:~/os-c$ 
+(os-c) cloud@devstack1:~/os-c$ git clone https://github.com/sureshkvl/os-cleanup
+Cloning into 'os-cleanup'...
+remote: Counting objects: 58, done.
+remote: Total 58 (delta 0), reused 0 (delta 0), pack-reused 58
+Unpacking objects: 100% (58/58), done.
+Checking connectivity... done.
+(os-c) cloud@devstack1:~/os-c$ cd os-cleanup/
+(os-c) cloud@devstack1:~/os-c/os-cleanup$ ls
+LICENSE  README.md  oscleanup  requirements.txt  setup.py  tox.ini
+(os-c) cloud@devstack1:~/os-c/os-cleanup$ pip install .
+Processing /home/cloud/os-c/os-cleanup
+....................skipped
+(os-c) cloud@devstack1:~/os-c/os-cleanup$
+(os-c) cloud@devstack1:~/os-c/os-cleanup$ python oscleanup/main.py 
+usage: Neutron Resource Cleanup script [-h] -T TENANT_ID --command
+                                       {list_networks,list_subnets,list_ports,list_routers,delete_networks,delete_subnets,delete_ports,delete_routers,inspect_networks,purge_networks,inspect_routers,list_servers}
+                                       [--args ARGS]
+Neutron Resource Cleanup script: error: argument -T/--tenant-id is required
+(os-c) cloud@devstack1:~/os-c/os-cleanup$ 
 
-1. Delete the VMs associated to the ports(networks)
-    - when we delete the VM, the associated ports also removed
-If the VM is associated with more than one networks, more than one ports ????????????????
+```
 
-2. Delete the Router:
-   remove the interfaces from the router
-   neutron router-interface-delete <routerid>  <subnetid>
+## How to use:
 
-   neutron clear
+1. Source your openstack creds file(openrc)
+2. Run the program as below
+    python oscleanup/main.py -T <Tenant ID> --command <command> [--args <args>]
+```
+(os-c) cloud@devstack1:~/os-c/os-cleanup$ python oscleanup/main.py -T 4f32991ec8c44a4198d5218abd5ba9c7 --command list_networks
+INFO:__main__:Neutron script starts with the arguments Namespace(args=None, command='list_networks', tenant_id='4f32991ec8c44a4198d5218abd5ba9c7')
++--------------------------------------+---------------------------------------------------------------------------------------------+--------+-----------------+-------------------------------------------+--------+
+| id                                   | name                                                                                        | status | router:external | subnets                                   | shared |
++--------------------------------------+---------------------------------------------------------------------------------------------+--------+-----------------+-------------------------------------------+--------+
+| e68c04f1-56f9-4411-991d-5434487002b7 | N1                                                                                          | ACTIVE | False           | [u'1acb3c2b-879c-455f-a4a0-28ddb5278c9d'] | False  |
+| 1a2361d4-a78b-4fca-adad-77ea8399506f | snat-si-left_snat_1bb507e8-4d73-4229-9b48-7091e4f02eb0_71466b30-2cda-4730-a076-da31275ef06e | ACTIVE | False           | [u'dfacb593-89e1-46de-ba9c-83c40d7bb4f4'] | False  |
++--------------------------------------+---------------------------------------------------------------------------------------------+--------+-----------------+-------------------------------------------+--------+
+```
 
-If the router is associated with more than one subnets/networks...??????????????????????
-   clear the router gateway?
-   neutron router-gateway-clear 5358f9b1-be3d-4f87-8a70-0b53632700a2
 
-   remove the router
-3. Delete the network
-neutron net-delete 3414765a-21f8-4715-8624-03010592adc
 
-4. floating ip ??
+
